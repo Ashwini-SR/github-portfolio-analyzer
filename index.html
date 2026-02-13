@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>GitHub Portfolio Analyzer</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+      color: #222;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      color: #2c3e50;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    p {
+      font-size: 1.1em;
+      margin-bottom: 30px;
+      color: #34495e;
+    }
+
+    input[type="text"] {
+      width: 450px;
+      padding: 12px 15px;
+      font-size: 1em;
+      border: 2px solid #2980b9;
+      border-radius: 8px;
+      margin-right: 10px;
+      transition: border-color 0.3s;
+    }
+
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #3498db;
+    }
+
+    button {
+      padding: 12px 25px;
+      background-color: #2980b9;
+      color: white;
+      font-weight: 600;
+      font-size: 1em;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #3498db;
+    }
+
+    #result {
+      max-width: 600px;
+      background: white;
+      padding: 30px 40px;
+      margin-top: 40px;
+      border-radius: 15px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      color: #2c3e50;
+    }
+
+    #result h2 {
+      color: #27ae60;
+      margin-bottom: 10px;
+    }
+
+    #result h3 {
+      margin-top: 25px;
+      margin-bottom: 10px;
+      border-bottom: 2px solid #2980b9;
+      padding-bottom: 5px;
+    }
+
+    #result ul {
+      list-style-type: disc;
+      margin-left: 20px;
+    }
+
+    #loading {
+      display: none;
+      color: #2980b9;
+      font-weight: 600;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 600px) {
+      input[type="text"] {
+        width: 90vw;
+        margin-bottom: 10px;
+      }
+      button {
+        width: 90vw;
+      }
+      #result {
+        width: 90vw;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>GitHub Portfolio Analyzer</h1>
+  <p>Turn Repositories into Recruiter-Ready Proof</p>
+
+  <form onsubmit="event.preventDefault(); analyze();">
+    <input type="text" id="githubUrl" placeholder="Enter GitHub Profile URL" />
+    <button type="submit">Analyze</button>
+  </form>
+
+  <p id="loading">Analyzing... Please wait.</p>
+
+  <div id="result"></div>
+
+  <script>
+    async function analyze() {
+      // Clear previous results
+      document.getElementById("result").innerHTML = "";
+
+      const loading = document.getElementById("loading");
+      loading.style.display = "block";  // Show loading
+
+      const url = document.getElementById("githubUrl").value.trim();
+      if (!url.includes("github.com/")) {
+        alert("Please enter a valid GitHub profile URL.");
+        loading.style.display = "none"; // Hide loading on error
+        return;
+      }
+
+      const username = url.split("github.com/")[1].split('/')[0];
+
+      try {
+        const response = await fetch(
+          `http://localhost:5000/analyze?username=${username}`
+        );
+        const data = await response.json();
+
+        loading.style.display = "none"; // Hide loading
+
+        if (data.error) {
+          alert(data.error);
+          return;
+        }
+
+        // Determine Hireability
+        let hireLevel = "Low";
+        if (data.totalScore > 80) hireLevel = "High";
+        else if (data.totalScore > 60) hireLevel = "Medium";
+
+        document.getElementById("result").innerHTML = `
+          <h2>Total Score: ${data.totalScore}/100</h2>
+          <h3>Hireability Indicator: ${hireLevel}</h3>
+
+          <h3>Score Breakdown:</h3>
+          <p>Documentation: ${data.documentationScore}/20</p>
+          <p>Activity: ${data.activityScore}/20</p>
+          <p>Technical Depth: ${data.depthScore}/20</p>
+          <p>Repository Strength: ${data.repoStrengthScore}/20</p>
+          <p>Impact: ${data.impactScore}/20</p>
+
+          <h3>Recruiter Red Flags:</h3>
+          <ul>
+            ${data.redFlags.length 
+              ? data.redFlags.map(r => `<li>${r}</li>`).join("") 
+              : "<li>No major red flags detected.</li>"}
+          </ul>
+
+          <h3>Actionable Suggestions:</h3>
+          <ul>
+            ${data.suggestions.map(s => `<li>${s}</li>`).join("")}
+          </ul>
+        `;
+      } catch (error) {
+        loading.style.display = "none";
+        alert("Error analyzing profile. Please try again.");
+      }
+    }
+  </script>
+</body>
+</html>
