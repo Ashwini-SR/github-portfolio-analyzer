@@ -62,7 +62,8 @@ The tool generates **dynamic red flags** based on the profile:
 
 ## 🎬 Demo Video
 
-[Watch the demo here](https://drive.google.com/uc?export=download&id=1CzRQGfxJxekx6D8d0KOaJ-xd6qwMn2ou)
+[Watch the demo here](https://drive.google.com/file/d/1CzRQGfxJxekx6D8d0KOaJ-xd6qwMn2ou/preview)
+
 
 
 ## 🧪 How to Run Locally
