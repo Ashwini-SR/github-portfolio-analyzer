@@ -1,37 +1,49 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <title>GitHub Portfolio Analyzer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
-      color: #222;
-      padding: 40px;
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: #f4f7fb;
+      color: #333;
       display: flex;
       flex-direction: column;
       align-items: center;
+      min-height: 100vh;
+      padding: 50px 20px;
     }
 
     h1 {
+      font-size: 2.2rem;
       color: #2c3e50;
-      font-weight: 700;
-      margin-bottom: 10px;
+      margin-bottom: 5px;
     }
 
-    p {
-      font-size: 1.1em;
+    p.subtitle {
+      color: #555;
+      font-size: 1rem;
       margin-bottom: 30px;
-      color: #34495e;
+    }
+
+    .input-group {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
     }
 
     input[type="text"] {
-      width: 450px;
       padding: 12px 15px;
-      font-size: 1em;
-      border: 2px solid #2980b9;
+      font-size: 1rem;
       border-radius: 8px;
-      margin-right: 10px;
+      border: 2px solid #2980b9;
+      flex: 1;
+      min-width: 250px;
       transition: border-color 0.3s;
     }
 
@@ -42,13 +54,13 @@
 
     button {
       padding: 12px 25px;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: none;
       background-color: #2980b9;
       color: white;
-      font-weight: 600;
-      font-size: 1em;
-      border: none;
-      border-radius: 8px;
       cursor: pointer;
+      font-weight: 600;
       transition: background-color 0.3s;
     }
 
@@ -56,112 +68,160 @@
       background-color: #3498db;
     }
 
+    #loading {
+      color: #2980b9;
+      font-weight: 600;
+      margin-top: 10px;
+      display: none;
+    }
+
     #result {
-      max-width: 600px;
-      background: white;
-      padding: 30px 40px;
       margin-top: 40px;
+      width: 100%;
+      max-width: 700px;
+      background: #fff;
       border-radius: 15px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-      color: #2c3e50;
+      padding: 30px 40px;
+      box-shadow: 0 15px 30px rgba(0,0,0,0.1);
     }
 
     #result h2 {
       color: #27ae60;
-      margin-bottom: 10px;
+      margin-bottom: 15px;
     }
 
     #result h3 {
       margin-top: 25px;
       margin-bottom: 10px;
+      color: #2980b9;
       border-bottom: 2px solid #2980b9;
       padding-bottom: 5px;
     }
 
-    #result ul {
+    .progress-bar {
+      background: #e0e0e0;
+      border-radius: 8px;
+      overflow: hidden;
+      height: 20px;
+      margin-bottom: 15px;
+    }
+
+    .progress {
+      height: 100%;
+      text-align: right;
+      padding-right: 5px;
+      color: white;
+      font-weight: 600;
+      line-height: 20px;
+      border-radius: 8px;
+    }
+
+    .documentation { background: #3498db; }
+    .activity { background: #2ecc71; }
+    .depth { background: #9b59b6; }
+    .strength { background: #e67e22; }
+    .impact { background: #e74c3c; }
+
+    ul {
       list-style-type: disc;
       margin-left: 20px;
+      color: #555;
     }
 
-    #loading {
-      display: none;
-      color: #2980b9;
-      font-weight: 600;
-      margin-top: 10px;
-    }
-
-    @media (max-width: 600px) {
-      input[type="text"] {
-        width: 90vw;
-        margin-bottom: 10px;
-      }
-      button {
-        width: 90vw;
-      }
+    @media(max-width: 600px){
       #result {
-        width: 90vw;
+        padding: 20px;
+      }
+      .input-group {
+        flex-direction: column;
+        align-items: stretch;
       }
     }
   </style>
 </head>
 <body>
+
   <h1>GitHub Portfolio Analyzer</h1>
-  <p>Turn Repositories into Recruiter-Ready Proof</p>
+  <p class="subtitle">Turn your GitHub repositories into recruiter-ready proof</p>
 
-  <form onsubmit="event.preventDefault(); analyze();">
-    <input type="text" id="githubUrl" placeholder="Enter GitHub Profile URL" />
-    <button type="submit">Analyze</button>
-  </form>
+  <div class="input-group">
+    <input type="text" id="githubUrl" placeholder="Enter GitHub username or URL">
+    <button onclick="analyze()">Analyze</button>
+  </div>
 
-  <p id="loading">Analyzing... Please wait.</p>
+  <p id="loading">Analyzing GitHub profile...</p>
 
   <div id="result"></div>
 
   <script>
     async function analyze() {
-      // Clear previous results
       document.getElementById("result").innerHTML = "";
-
       const loading = document.getElementById("loading");
-      loading.style.display = "block";  // Show loading
+      loading.style.display = "block";
 
-      const url = document.getElementById("githubUrl").value.trim();
-      if (!url.includes("github.com/")) {
-        alert("Please enter a valid GitHub profile URL.");
-        loading.style.display = "none"; // Hide loading on error
+      let url = document.getElementById("githubUrl").value.trim();
+      if (!url) {
+        alert("Please enter a GitHub username or URL.");
+        loading.style.display = "none";
         return;
       }
 
-      const username = url.split("github.com/")[1].split('/')[0];
+      let username;
+      try {
+        if (url.includes("github.com")) {
+          username = url.replace(/https?:\/\/github\.com\//, '').replace(/\/$/, '').trim();
+        } else {
+          username = url.trim();
+        }
+      } catch {
+        alert("Invalid GitHub URL or username.");
+        loading.style.display = "none";
+        return;
+      }
 
       try {
-        const response = await fetch(
-          `http://localhost:5000/analyze?username=${username}`
-        );
+        const response = await fetch(`http://localhost:5000/analyze?username=${username}`);
         const data = await response.json();
-
-        loading.style.display = "none"; // Hide loading
+        loading.style.display = "none";
 
         if (data.error) {
           alert(data.error);
           return;
         }
 
-        // Determine Hireability
+        // Hireability
         let hireLevel = "Low";
         if (data.totalScore > 80) hireLevel = "High";
-        else if (data.totalScore > 60) hireLevel = "Medium";
+        else if (data.totalScore > 40) hireLevel = "Medium";
+
+        // Proper progress bar with max points
+        function progressBar(score, category) {
+          let maxPoints = 20; // default
+          if (category === 'documentation' || category === 'activity') maxPoints = 10;
+          if (category === 'depth') maxPoints = 20;
+          if (category === 'strength' || category === 'impact') maxPoints = 30;
+
+          const widthPercent = (score / maxPoints) * 100;
+
+          return `
+            <div class="progress-bar">
+              <div class="progress ${category}" style="width:${widthPercent}%;">
+                ${score}/${maxPoints}
+              </div>
+            </div>
+          `;
+        }
 
         document.getElementById("result").innerHTML = `
           <h2>Total Score: ${data.totalScore}/100</h2>
           <h3>Hireability Indicator: ${hireLevel}</h3>
 
           <h3>Score Breakdown:</h3>
-          <p>Documentation: ${data.documentationScore}/20</p>
-          <p>Activity: ${data.activityScore}/20</p>
-          <p>Technical Depth: ${data.depthScore}/20</p>
-          <p>Repository Strength: ${data.repoStrengthScore}/20</p>
-          <p>Impact: ${data.impactScore}/20</p>
+          <div><strong>Documentation:</strong> ${progressBar(data.documentationScore, 'documentation')}</div>
+          <div><strong>Activity:</strong> ${progressBar(data.activityScore, 'activity')}</div>
+          <div><strong>Depth:</strong> ${progressBar(data.depthScore, 'depth')}</div>
+          <div><strong>Repo Strength:</strong> ${progressBar(data.repoStrengthScore, 'strength')}</div>
+          <div><strong>Impact:</strong> ${progressBar(data.impactScore, 'impact')}</div>
 
           <h3>Recruiter Red Flags:</h3>
           <ul>
@@ -177,9 +237,10 @@
         `;
       } catch (error) {
         loading.style.display = "none";
-        alert("Error analyzing profile. Please try again.");
+        alert("Error analyzing profile. Make sure your backend server is running.");
       }
     }
   </script>
+
 </body>
 </html>

@@ -1,144 +1,109 @@
 const express = require("express");
-const axios = require("axios");
+const fetch = require("node-fetch");
 const cors = require("cors");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
+const PORT = 5000;
+
+// Helper function to get GitHub user repos
+async function getUserRepos(username) {
+  const response = await fetch(`https://api.github.com/users/${username}/repos`);
+  if (!response.ok) return null;
+  return await response.json();
+}
+
+// Helper to calculate score
+function calculateScores(repos) {
+  let documentationScore = 0;
+  let activityScore = 0;
+  let depthScore = 0;
+  let repoStrengthScore = 0;
+  let impactScore = 0;
+
+  if (!repos || repos.length === 0) {
+    return { documentationScore, activityScore, depthScore, repoStrengthScore, impactScore };
+  }
+
+  repos.forEach((repo) => {
+    // Documentation: README exists
+    documentationScore += repo.has_wiki || repo.description ? 2 : 0;
+
+    // Depth: language complexity & topics
+    depthScore += repo.language ? 2 : 0;
+
+    // Repo Strength: size, forks, stars
+    repoStrengthScore += Math.min(repo.stargazers_count + repo.forks_count, 6);
+
+    // Impact: presence of topics, visibility, description
+    impactScore += repo.topics?.length ? 3 : 1;
+  });
+
+  // Activity: commits over all repos (simplified as number of repos with pushed_at within last year)
+  const now = new Date();
+  const activeRepos = repos.filter(r => r.pushed_at && (new Date(r.pushed_at) > new Date(now.setFullYear(now.getFullYear() - 1))));
+  activityScore = Math.min(activeRepos.length * 2, 10);
+
+  // Cap the scores to their max
+  documentationScore = Math.min(documentationScore, 10);
+  activityScore = Math.min(activityScore, 10);
+  depthScore = Math.min(depthScore, 20);
+  repoStrengthScore = Math.min(repoStrengthScore, 30);
+  impactScore = Math.min(impactScore, 30);
+
+  return { documentationScore, activityScore, depthScore, repoStrengthScore, impactScore };
+}
+
+// Dynamic red flags and suggestions
+function generateFeedback(scores, repos) {
+  const { documentationScore, activityScore, depthScore, repoStrengthScore, impactScore } = scores;
+  const redFlags = [];
+  const suggestions = [];
+
+  if (!repos || repos.length === 0) {
+    redFlags.push("No public repositories found");
+    suggestions.push("Create at least one project repository to showcase your skills");
+    return { redFlags, suggestions };
+  }
+
+  if (documentationScore < 5) redFlags.push("Documentation is weak");
+  if (documentationScore < 5) suggestions.push("Improve README files with clear explanations");
+
+  if (activityScore < 5) redFlags.push("Low activity consistency");
+  if (activityScore < 5) suggestions.push("Commit regularly to show consistency");
+
+  if (repoStrengthScore < 15) redFlags.push("Repositories have low technical depth or structure issues");
+  if (repoStrengthScore < 15) suggestions.push("Refactor code for best practices and clarity");
+
+  if (depthScore < 10) redFlags.push("Projects lack technical depth");
+  if (depthScore < 10) suggestions.push("Add more challenging features or algorithms");
+
+  if (impactScore < 15) redFlags.push("Projects lack real-world relevance");
+  if (impactScore < 15) suggestions.push("Highlight real-world use cases or business impact");
+
+  return { redFlags, suggestions };
+}
+
 app.get("/analyze", async (req, res) => {
   const username = req.query.username;
+  if (!username) return res.json({ error: "GitHub username is required" });
 
-  if (!username) {
-    return res.status(400).json({ error: "Username required" });
-  }
+  const repos = await getUserRepos(username);
+  if (repos === null) return res.json({ error: "GitHub user not found or API rate limit exceeded" });
 
-  try {
-    // Fetch user data
-    const userResponse = await axios.get(
-      `https://api.github.com/users/${username}`
-    );
+  const scores = calculateScores(repos);
+  const feedback = generateFeedback(scores, repos);
 
-    // Fetch repositories
-    const repoResponse = await axios.get(
-      `https://api.github.com/users/${username}/repos`
-    );
+  const totalScore = scores.documentationScore + scores.activityScore + scores.depthScore + scores.repoStrengthScore + scores.impactScore;
 
-    const repos = repoResponse.data;
-
-    // -----------------------------
-    // SCORING LOGIC
-    // -----------------------------
-
-    let documentationScore = 0;
-    let activityScore = 0;
-    let depthScore = 0;
-    let repoStrengthScore = 0;
-    let impactScore = 0;
-
-    // 1️⃣ Documentation Score (20)
-    repos.forEach(repo => {
-      if (repo.description && repo.description.length > 10) {
-        documentationScore += 2;
-      }
-    });
-    documentationScore = Math.min(documentationScore, 20);
-
-    // 2️⃣ Activity Score (20)
-    const recentRepos = repos.filter(repo => {
-      const updated = new Date(repo.updated_at);
-      const now = new Date();
-      const diffDays = (now - updated) / (1000 * 60 * 60 * 24);
-      return diffDays < 30;
-    });
-    activityScore = Math.min(recentRepos.length * 4, 20);
-
-    // 3️⃣ Technical Depth Score (20)
-    const languages = new Set(
-      repos.map(repo => repo.language).filter(Boolean)
-    );
-    depthScore = Math.min(languages.size * 5, 20);
-
-    // 4️⃣ Repository Strength Score (20)
-    repoStrengthScore = Math.min(repos.length * 2, 20);
-
-    // 5️⃣ Impact Score (20)
-    if (repos.some(repo => repo.stargazers_count > 10)) {
-      impactScore = 20;
-    } else if (repos.some(repo => repo.stargazers_count > 0)) {
-      impactScore = 10;
-    } else {
-      impactScore = 5;
-    }
-
-    const totalScore =
-      documentationScore +
-      activityScore +
-      depthScore +
-      repoStrengthScore +
-      impactScore;
-
-    // -----------------------------
-    // SUGGESTIONS
-    // -----------------------------
-
-    let suggestions = [];
-
-    if (documentationScore < 10)
-      suggestions.push(
-        "Improve README files and add detailed project descriptions."
-      );
-
-    if (activityScore < 10)
-      suggestions.push(
-        "Increase commit consistency and update repositories regularly."
-      );
-
-    if (depthScore < 10)
-      suggestions.push(
-        "Use more diverse technologies to demonstrate technical depth."
-      );
-
-    if (repoStrengthScore < 10)
-      suggestions.push(
-        "Create more high-quality public repositories to strengthen your portfolio."
-      );
-
-    if (impactScore < 10)
-      suggestions.push(
-        "Work on projects that attract stars or contribute to open source for visibility."
-      );
-
-    // -----------------------------
-    // RED FLAGS
-    // -----------------------------
-
-    let redFlags = [];
-
-    if (repos.length < 3)
-      redFlags.push("Very few public repositories.");
-
-    if (activityScore < 8)
-      redFlags.push("Low recent activity detected.");
-
-    if (!repos.some(repo => repo.stargazers_count > 0))
-      redFlags.push("No repository has stars — low community engagement.");
-
-    res.json({
-      totalScore,
-      documentationScore,
-      activityScore,
-      depthScore,
-      repoStrengthScore,
-      impactScore,
-      totalRepos: repos.length,
-      suggestions,
-      redFlags
-    });
-
-  } catch (error) {
-    res.status(500).json({ error: "Invalid GitHub username" });
-  }
+  res.json({
+    totalScore,
+    ...scores,
+    redFlags: feedback.redFlags,
+    suggestions: feedback.suggestions
+  });
 });
 
-app.listen(5000, () => console.log("Server running on port 5000"));
+app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
