@@ -1,74 +1,92 @@
-# GitHub Portfolio Analyzer
+GitHireScore
+Recruiter-Driven GitHub Portfolio Analyzer
+Problem Statement
 
-## 🎯 Problem
-Many students and early-career developers struggle to present their GitHub profiles in a way that recruiters can quickly evaluate.  
-Common issues include:  
+For most students and early-career developers, GitHub acts as their primary portfolio. However, many profiles fail to clearly communicate skills, consistency, or real-world impact.
 
-- Missing or incomplete README files  
-- Poor project documentation  
-- Inconsistent commits  
-- Lack of clarity on skills or project impact  
+Common problems include:
 
-A weak GitHub profile can silently close doors, even when technical skills exist.
+Missing or incomplete README files
 
----
+Weak project explanations
 
-## 💡 Solution
-This tool analyzes a GitHub profile and:  
+Irregular commit activity
 
-- Generates a **recruiter-ready score**  
-- Highlights **strengths and red flags**  
-- Provides **actionable suggestions** to improve  
-- Helps students know which repos to improve or archive  
+Unclear technical depth
 
----
+No indication of business or real-world relevance
 
-## 🛠️ Features
-- ✅ Accepts a GitHub username or profile URL  
-- ✅ Analyzes public and pinned repositories  
-- ✅ Scores profiles dynamically based on documentation, activity, repo strength, impact, and technical depth  
-- ✅ Shows **red flags** for weak points  
-- ✅ Provides **actionable improvement suggestions**  
-- ✅ Clean, user-friendly interface  
+Because recruiters often scan profiles quickly, poor presentation can negatively impact opportunities — even if the candidate has strong technical ability.
 
----
+Proposed Solution
 
-## 📊 Scoring Dimensions
-Each profile is scored out of **100 points** across the following dimensions:  
+GitHireScore analyzes a public GitHub profile and simulates how a recruiter might evaluate it.
 
-| Metric                  | Max Points | Description |
-|-------------------------|------------|-------------|
-| Documentation Quality    | 10         | README, comments, explanations |
-| Code Structure & Best Practices | 20   | Clean, organized, scalable code |
-| Activity Consistency     | 10         | Commit patterns, pull requests |
-| Repository Organization  | 30         | Repo structure, completeness, relevance |
-| Project Impact & Real-World Relevance | 30 | Problem-solving, innovation, usefulness |
+The tool:
 
-**Hireability Indicator:** Low / Medium / High based on overall score
+Generates a structured Portfolio Score (out of 100)
 
----
+Identifies key strengths
 
-## ⚠️ Red Flags & Suggestions
-The tool generates **dynamic red flags** based on the profile:  
+Detects red flags
 
-- No README or poor documentation → Suggestion: Add detailed README  
-- Few commits → Suggestion: Commit regularly to show consistency  
-- Small or incomplete repos → Suggestion: Consolidate or expand projects  
-- Lack of variety in tech stack → Suggestion: Explore multiple languages or frameworks  
+Provides clear, actionable suggestions
 
-> Red flags and suggestions are personalized per profile.
+Helps users understand how to improve their GitHub presence
 
----
+The goal is simple:
 
-## 🎬 Demo Video
+Help students become recruiter-ready in a measurable way.
 
-[Watch the demo here](https://drive.google.com/file/d/1CzRQGfxJxekx6D8d0KOaJ-xd6qwMn2ou/preview)
+Key Features
 
+Accepts a GitHub username or profile URL
 
+Fetches public repository data using the GitHub API
 
-## 🧪 How to Run Locally
-1. Clone the repository:
+Evaluates documentation, activity, organization, and impact
 
-```bash
-git clone https://github.com/Ashwini-SR/github-portfolio-analyzer.git
-cd github-portfolio-analyzer
+Generates a structured Portfolio Score
+
+Displays strengths and weaknesses clearly
+
+Provides at least 3 actionable improvement suggestions
+
+Clean and simple interface for quick analysis
+
+Scoring Framework (Out of 100)
+Metric	Max Points	What It Evaluates
+Documentation Quality	20	Presence and clarity of README files
+Activity Consistency	20	Recent commits and update patterns
+Technical Diversity	15	Variety of languages and technologies
+Repository Strength	25	Number, completeness, and organization of repos
+Professional Presentation	20	Bio, structure, overall profile clarity
+Hireability Indicator:
+
+80–100: High
+
+60–79: Medium
+
+Below 60: Needs Improvement
+
+This structure ensures objective and transparent evaluation.
+
+Red Flags & Recommendations
+
+The tool generates data-based feedback such as:
+
+Missing README files → Add structured documentation with installation and usage sections
+
+No recent activity → Maintain consistent commits
+
+Low repository count → Build and publish more complete projects
+
+Limited language diversity → Explore additional technologies
+
+All suggestions are based on the analyzed data — not generic advice.
+
+Demo Video
+
+Watch the live working prototype here:
+
+https://drive.google.com/file/d/1CzRQGfxJxekx6D8d0KOaJ-xd6qwMn2ou/preview
