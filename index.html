@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>GitHub Portfolio Analyzer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+
+    <div>
+        <h1>GitHub Portfolio Analyzer</h1>
+        <p>Analyze your GitHub profile like a recruiter. Get a structured score and improvement suggestions.</p>
+
+        <hr>
+
+        <form id="githubForm">
+
+            <label for="githubUrl">GitHub Profile URL:</label><br><br>
+
+            <input 
+                type="url" 
+                id="githubUrl" 
+                name="githubUrl"
+                placeholder="https://github.com/username"
+                required
+                style="width: 300px; padding: 8px;"
+            >
+
+            <br><br>
+
+            <button type="submit" style="padding: 8px 16px;">
+                Analyze Profile
+            </button>
+
+        </form>
+
+        <hr>
+
+        <div id="result">
+            <!-- Analysis results will appear here in future -->
+        </div>
+
+    </div>
+
+</body>
+</html>
