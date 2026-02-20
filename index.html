@@ -4,44 +4,36 @@
     <meta charset="UTF-8">
     <title>GitHub Portfolio Analyzer</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-    <div>
-        <h1>GitHub Portfolio Analyzer</h1>
-        <p>Analyze your GitHub profile like a recruiter. Get a structured score and improvement suggestions.</p>
+   <body>
 
-        <hr>
+    <div class="container">
+        <div class="card">
+            <h1>GitHub Portfolio Analyzer</h1>
+            <p class="subtitle">
+                Analyze your GitHub profile like a recruiter.
+                Get a structured score and improvement insights.
+            </p>
 
-        <form id="githubForm">
+            <form id="githubForm">
+                <input 
+                    type="url" 
+                    id="githubUrl" 
+                    placeholder="https://github.com/username"
+                    required
+                >
+                <button type="submit">Analyze Profile</button>
+            </form>
 
-            <label for="githubUrl">GitHub Profile URL:</label><br><br>
-
-            <input 
-                type="url" 
-                id="githubUrl" 
-                name="githubUrl"
-                placeholder="https://github.com/username"
-                required
-                style="width: 300px; padding: 8px;"
-            >
-
-            <br><br>
-
-            <button type="submit" style="padding: 8px 16px;">
-                Analyze Profile
-            </button>
-
-        </form>
-
-        <hr>
-
-        <div id="result">
-            <!-- Analysis results will appear here in future -->
+            <div id="result"></div>
         </div>
-
     </div>
+
+</body>
 
 </body>
 </html>
