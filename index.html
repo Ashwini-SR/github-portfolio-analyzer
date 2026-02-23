@@ -9,31 +9,18 @@
 
 <body>
 
-   <body>
-
     <div class="container">
         <div class="card">
-            <h1>GitHub Portfolio Analyzer</h1>
-            <p class="subtitle">
-                Analyze your GitHub profile like a recruiter.
-                Get a structured score and improvement insights.
-            </p>
-
+            <h2>GitHub Portfolio Analyzer</h2>
             <form id="githubForm">
-                <input 
-                    type="url" 
-                    id="githubUrl" 
-                    placeholder="https://github.com/username"
-                    required
-                >
+                <input type="text" id="githubUrl" placeholder="Enter GitHub Username">
                 <button type="submit">Analyze Profile</button>
             </form>
-
-            <div id="result"></div>
         </div>
-    </div>
-<script src="script.js"></script>
-</body>
 
+        <div id="result" class="card"></div>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
