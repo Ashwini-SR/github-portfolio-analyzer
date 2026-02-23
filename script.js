@@ -59,10 +59,16 @@ form.addEventListener("submit", function(e) {
     let strengthsHTML = strengths.map(item =>
         `<li class="strength">✔ ${item}</li>`
     ).join("");
+    let redFlagsHTML;
 
-    let redFlagsHTML = redFlags.map(item =>
+if (redFlags.length === 0) {
+    redFlagsHTML = `<li class="strength">✔ No major red flags detected</li>`;
+} else {
+    redFlagsHTML = redFlags.map(item =>
         `<li class="red-flag">✖ ${item}</li>`
     ).join("");
+}
+
 
     // Display Result
     resultDiv.innerHTML = `
