@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const axios = require("axios");
 const cors = require("cors");
@@ -15,8 +16,19 @@ app.get("/analyze/:username", async (req, res) => {
 
     try {
         // Fetch user and repositories
-        const userRes = await axios.get(`https://api.github.com/users/${username}`);
-        const repoRes = await axios.get(`https://api.github.com/users/${username}/repos?per_page=100`);
+        const headers = {
+    Authorization: `token ${process.env.GITHUB_TOKEN}`
+};
+
+const userRes = await axios.get(
+    `https://api.github.com/users/${username}`,
+    { headers }
+);
+
+const repoRes = await axios.get(
+    `https://api.github.com/users/${username}/repos?per_page=100`,
+    { headers }
+);
 
         const user = userRes.data;
         const repos = repoRes.data;
@@ -136,9 +148,20 @@ app.get("/analyze/:username", async (req, res) => {
             languages: Array.from(languages)
         });
 
-    } catch (error) {
-        res.status(500).json({ error: "User not found" });
+    }   catch (error) {
+    const status = error.response?.status;
+
+    if (status === 404) {
+        return res.status(404).json({ error: "GitHub user not found" });
     }
+
+    if (status === 403) {
+        return res.status(403).json({ error: "GitHub API rate limit exceeded" });
+    }
+
+    console.error("Unexpected error:", error.message);
+    res.status(500).json({ error: "Server error while analyzing profile" });
+}
 });
 
 app.listen(PORT, () => {
