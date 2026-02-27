@@ -1,169 +1,138 @@
-require("dotenv").config();
 const express = require("express");
 const axios = require("axios");
 const cors = require("cors");
-const path = require("path");
+require("dotenv").config();   // ✅ Correct place
 
 const app = express();
-const PORT = 5000;
-
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static("public"));
 
-app.get("/analyze/:username", async (req, res) => {
-    const username = req.params.username;
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 
-    try {
-        // Fetch user and repositories
-        const headers = {
-    Authorization: `token ${process.env.GITHUB_TOKEN}`
+console.log("Token loaded:", GITHUB_TOKEN ? "YES" : "NO");
+
+const headers = {
+  Authorization: `token ${GITHUB_TOKEN}`,
 };
 
-const userRes = await axios.get(
-    `https://api.github.com/users/${username}`,
-    { headers }
-);
+app.get("/analyze/:username", async (req, res) => {
+  const username = req.params.username;
 
-const repoRes = await axios.get(
-    `https://api.github.com/users/${username}/repos?per_page=100`,
-    { headers }
-);
+  try {
+    // 1️⃣ Get User Info
+    const userRes = await axios.get(
+      `https://api.github.com/users/${username}`,
+      { headers }
+    );
 
-        const user = userRes.data;
-        const repos = repoRes.data;
+    // 2️⃣ Get Repositories
+    const repoRes = await axios.get(
+      `https://api.github.com/users/${username}/repos?per_page=100`,
+      { headers }
+    );
 
-        let score = 0;
-        let redFlags = [];
-        let strengths = [];
+    const repos = repoRes.data;
 
-        const publicRepos = user.public_repos;
-        const followers = user.followers;
+    let totalStars = 0;
+    let topRepo = null;
+    let languageCount = {};
 
-        // --------------------------
-        // 1️⃣ Repository Count (20)
-        // --------------------------
-        if (publicRepos >= 20) {
-            score += 20;
-            strengths.push("Strong repository presence");
-        } else if (publicRepos >= 10) {
-            score += 15;
-        } else if (publicRepos >= 5) {
-            score += 8;
-        } else {
-            redFlags.push("Very few public repositories");
-        }
+    repos.forEach((repo) => {
+      totalStars += repo.stargazers_count;
 
-        // --------------------------
-        // 2️⃣ Followers (15)
-        // --------------------------
-        if (followers >= 500) {
-            score += 15;
-            strengths.push("Strong community recognition");
-        } else if (followers >= 100) {
-            score += 10;
-        } else if (followers >= 10) {
-            score += 5;
-        } else {
-            redFlags.push("Low community presence");
-        }
+      if (!topRepo || repo.stargazers_count > topRepo.stars) {
+        topRepo = {
+          name: repo.name,
+          stars: repo.stargazers_count,
+        };
+      }
 
-        // --------------------------
-        // 3️⃣ Documentation Quality (15)
-        // --------------------------
-        const reposWithDesc = repos.filter(r => r.description && r.description.trim() !== "").length;
-        const docRatio = publicRepos ? reposWithDesc / publicRepos : 0;
+      if (repo.language) {
+        languageCount[repo.language] =
+          (languageCount[repo.language] || 0) + 1;
+      }
+    });
 
-        if (docRatio >= 0.7) {
-            score += 15;
-            strengths.push("Good documentation coverage");
-        } else if (docRatio >= 0.4) {
-            score += 8;
-        } else {
-            redFlags.push("Many repositories lack proper descriptions");
-        }
+    // Convert language count to percentages
+    const languagePercentages = {};
+    const totalLanguages = Object.values(languageCount).reduce(
+      (a, b) => a + b,
+      0
+    );
 
-        // --------------------------
-        // 4️⃣ Activity Consistency (20)
-        // --------------------------
-        const recentRepos = repos.filter(r => {
-            const updated = new Date(r.updated_at);
-            const now = new Date();
-            const diffDays = (now - updated) / (1000 * 60 * 60 * 24);
-            return diffDays < 90;
-        });
-
-        if (recentRepos.length >= 5) {
-            score += 20;
-            strengths.push("Highly active in last 3 months");
-        } else if (recentRepos.length >= 2) {
-            score += 10;
-        } else {
-            redFlags.push("Low recent activity (last 3 months)");
-        }
-
-        // --------------------------
-        // 5️⃣ Language Diversity (15)
-        // --------------------------
-        const languages = new Set();
-        repos.forEach(r => {
-            if (r.language) languages.add(r.language);
-        });
-
-        if (languages.size >= 5) {
-            score += 15;
-            strengths.push("Strong technology diversity");
-        } else if (languages.size >= 3) {
-            score += 10;
-        } else if (languages.size >= 1) {
-            score += 5;
-        } else {
-            redFlags.push("Limited technology stack");
-        }
-
-        // --------------------------
-        // 6️⃣ Profile Completeness (15)
-        // --------------------------
-        if (user.bio && user.bio.trim() !== "") {
-            score += 5;
-        } else {
-            redFlags.push("No bio added");
-        }
-
-        if (user.blog) score += 5;
-        if (user.company) score += 5;
-
-        // Clamp score to 100
-        score = Math.min(score, 100);
-
-        res.json({
-            username: user.login,
-            avatar: user.avatar_url,
-            profileUrl: user.html_url,
-            repos: publicRepos,
-            followers: followers,
-            score,
-            strengths: strengths.length ? strengths : ["Growing profile"],
-            redFlags: redFlags.length ? redFlags : ["No major red flags"],
-            languages: Array.from(languages)
-        });
-
-    }   catch (error) {
-    const status = error.response?.status;
-
-    if (status === 404) {
-        return res.status(404).json({ error: "GitHub user not found" });
+    for (let lang in languageCount) {
+      languagePercentages[lang] = Math.round(
+        (languageCount[lang] / totalLanguages) * 100
+      );
     }
 
-    if (status === 403) {
-        return res.status(403).json({ error: "GitHub API rate limit exceeded" });
-    }
+    // 3️⃣ Calculate Score
+    let score = 0;
 
-    console.error("Unexpected error:", error.message);
-    res.status(500).json({ error: "Server error while analyzing profile" });
-}
+    if (repos.length >= 10) score += 20;
+    else score += repos.length * 2;
+
+    if (userRes.data.followers >= 10) score += 15;
+    else score += userRes.data.followers;
+
+    score += Math.min(totalStars, 20);
+
+    if (Object.keys(languageCount).length >= 3) score += 15;
+
+    if (userRes.data.bio) score += 10;
+    if (userRes.data.blog) score += 5;
+    if (userRes.data.public_gists > 0) score += 5;
+
+    if (score > 100) score = 100;
+
+    // 4️⃣ Recommendations
+    let recommendations = [];
+    let redFlags = [];
+
+    if (repos.length < 5)
+      recommendations.push("Create more public repositories.");
+    if (totalStars < 5)
+      recommendations.push("Work on projects that attract stars.");
+    if (!userRes.data.bio)
+      recommendations.push("Add a bio to your profile.");
+    if (Object.keys(languageCount).length < 2)
+      recommendations.push("Use multiple programming languages.");
+
+    if (repos.length === 0)
+      redFlags.push("No public repositories.");
+    if (userRes.data.followers === 0)
+      redFlags.push("No followers yet.");
+    if (!userRes.data.bio)
+      redFlags.push("Profile bio missing.");
+
+    // 5️⃣ Final Response
+    res.json({
+      username: userRes.data.login,
+      avatar: userRes.data.avatar_url,
+      profileUrl: userRes.data.html_url,
+      score,
+      totalStars,
+      topRepo: topRepo ? topRepo.name : null,
+      languagePercentages,
+      breakdown: {
+        repositories: repos.length,
+        followers: userRes.data.followers,
+        documentation: userRes.data.bio ? "Yes" : "No",
+        activity: userRes.data.public_gists,
+        languages: Object.keys(languageCount).length,
+        stars: totalStars,
+        profile: userRes.data.blog ? "Complete" : "Incomplete",
+      },
+      recommendations,
+      redFlags,
+    });
+  } catch (error) {
+    console.log("GitHub API Error:", error.response?.data || error.message);
+    res.status(500).json({ error: "User not found or API error" });
+  }
 });
 
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+app.listen(5000, () => {
+  console.log("Server running on http://localhost:5000");
 });
