@@ -16,7 +16,10 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         resultDiv.style.display = "block";
-        resultDiv.innerHTML = "Analyzing profile...";
+        resultDiv.innerHTML = `
+    <div class="loader"></div>
+    <p>Analyzing GitHub profile...</p>
+`;
 
         try {
             const response = await fetch(`/analyze/${username}`);
@@ -32,6 +35,9 @@ document.addEventListener("DOMContentLoaded", function () {
             else if (data.score >= 40) scoreColor = "#ffc107";
 
             let languageHTML = "";
+            if (Object.keys(data.languagePercentages).length === 0) {
+    languageHTML = "<p>No language data available</p>";
+}
             for (let lang in data.languagePercentages) {
                 languageHTML += `
                     <p>${lang} - ${data.languagePercentages[lang]}%</p>
@@ -88,10 +94,14 @@ document.addEventListener("DOMContentLoaded", function () {
             `;
 
         } catch (error) {
-    console.error("Frontend Error:", error);
+    console.error(error);
 
-    resultDiv.innerHTML =
-        "<p class='red-flag'>Server error. Please try again.</p>";
+    resultDiv.innerHTML = `
+        <div class="error-box">
+            ❌ Unable to analyze profile.<br>
+            Check username or try again later.
+        </div>
+    `;
 }
 
     });
