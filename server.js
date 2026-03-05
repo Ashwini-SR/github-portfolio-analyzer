@@ -41,6 +41,17 @@ app.get("/analyze/:username", async (req, res) => {
 
     
     const repos = repoRes.data;
+    // Sort repositories by stars
+const sortedRepos = repos
+  .slice()
+  .sort((a, b) => b.stargazers_count - a.stargazers_count);
+
+// Top 5 repositories
+const topRepositories = sortedRepos.slice(0, 5).map(repo => ({
+  name: repo.name,
+  stars: repo.stargazers_count,
+  url: repo.html_url
+}));
 
 // ✅ ADD THIS BLOCK HERE
 if (repos.length === 0) {
@@ -146,6 +157,7 @@ if (repos.length === 0) {
       score,
       totalStars,
       topRepo: topRepo ? topRepo.name : null,
+      topRepositories,
       languagePercentages,
       breakdown: {
         repositories: repos.length,

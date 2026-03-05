@@ -36,7 +36,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             let languageHTML = "";
             if (Object.keys(data.languagePercentages).length === 0) {
-    languageHTML = "<p>No language data available</p>";
+                languageHTML = "<p>No language data available</p>";
 }
             for (let lang in data.languagePercentages) {
                 languageHTML += `
@@ -46,6 +46,22 @@ document.addEventListener("DOMContentLoaded", function () {
                     </div>
                 `;
             }
+            let repoHTML = "";
+
+if (data.topRepositories && data.topRepositories.length > 0) {
+    repoHTML = "<h3>Top Repositories</h3><ul>";
+
+    data.topRepositories.forEach(repo => {
+        repoHTML += `
+            <li>
+                <a href="${repo.url}" target="_blank">${repo.name}</a>
+                ⭐ ${repo.stars}
+            </li>
+        `;
+    });
+
+    repoHTML += "</ul>";
+}
 
             let breakdownHTML = `
                 <table class="breakdown-table">
@@ -81,7 +97,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 <h3>Total Stars: ⭐ ${data.totalStars}</h3>
                 <p>Top Repository: ${data.topRepo || "N/A"}</p>
-
+                ${repoHTML}
+                
                 <h3>Recommendations</h3>
                 <ul>
                     ${data.recommendations.map(r => `<li>${r}</li>`).join("")}
