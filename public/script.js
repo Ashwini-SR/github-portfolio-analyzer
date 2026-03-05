@@ -88,9 +88,12 @@ document.addEventListener("DOMContentLoaded", function () {
             `;
 
         } catch (error) {
-            console.error(error);
-            resultDiv.innerHTML = `<p class="red-flag">Server error. Please try again.</p>`;
-        }
+    console.error("Frontend Error:", error);
+
+    resultDiv.innerHTML =
+        "<p class='red-flag'>Server error. Please try again.</p>";
+}
+
     });
 
 });

@@ -1,7 +1,7 @@
 const express = require("express");
 const axios = require("axios");
 const cors = require("cors");
-require("dotenv").config();   // ✅ Correct place
+require("dotenv").config();   
 
 const app = express();
 app.use(cors());
@@ -18,8 +18,15 @@ const headers = {
 
 app.get("/analyze/:username", async (req, res) => {
   const username = req.params.username;
+   if (!/^[a-zA-Z0-9-]+$/.test(username)) {
+        return res.status(400).json({ error: "Invalid GitHub username." });
+    }
 
   try {
+      const rateLimit = await axios.get(
+      "https://api.github.com/rate_limit",
+      { headers }
+    );
     // 1️⃣ Get User Info
     const userRes = await axios.get(
       `https://api.github.com/users/${username}`,
@@ -32,7 +39,32 @@ app.get("/analyze/:username", async (req, res) => {
       { headers }
     );
 
+    
     const repos = repoRes.data;
+
+// ✅ ADD THIS BLOCK HERE
+if (repos.length === 0) {
+  return res.json({
+    username: userRes.data.login,
+    avatar: userRes.data.avatar_url,
+    profileUrl: userRes.data.html_url,
+    score: 0,
+    totalStars: 0,
+    topRepo: null,
+    languagePercentages: {},
+    breakdown: {
+      repositories: 0,
+      followers: userRes.data.followers,
+      documentation: "No",
+      activity: 0,
+      languages: 0,
+      stars: 0,
+      profile: "Incomplete",
+    },
+    recommendations: ["Create your first public repository."],
+    redFlags: ["No public repositories."],
+  });
+}
 
     let totalStars = 0;
     let topRepo = null;
