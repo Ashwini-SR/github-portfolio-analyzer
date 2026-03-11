@@ -5,6 +5,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const inputField = document.getElementById("githubUrl");
 
     form.addEventListener("submit", async function (e) {
+
         e.preventDefault();
 
         const username = inputField.value.trim();
@@ -17,11 +18,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
         resultDiv.style.display = "block";
         resultDiv.innerHTML = `
-    <div class="loader"></div>
-    <p>Analyzing GitHub profile...</p>
-`;
+            <div class="loader"></div>
+            <p>Analyzing GitHub profile...</p>
+        `;
 
         try {
+
             const response = await fetch(`/analyze/${username}`);
             const data = await response.json();
 
@@ -31,37 +33,60 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
             let scoreColor = "#dc3545";
+
             if (data.score >= 70) scoreColor = "#28a745";
             else if (data.score >= 40) scoreColor = "#ffc107";
 
+
+            /* Language Section */
+
             let languageHTML = "";
+
             if (Object.keys(data.languagePercentages).length === 0) {
                 languageHTML = "<p>No language data available</p>";
-}
-            for (let lang in data.languagePercentages) {
-                languageHTML += `
-                    <p>${lang} - ${data.languagePercentages[lang]}%</p>
-                    <div class="score-bar">
-                        <div class="score-fill" style="width:${data.languagePercentages[lang]}%; background:${scoreColor}"></div>
-                    </div>
-                `;
+            } 
+            else {
+
+                for (let lang in data.languagePercentages) {
+
+                    languageHTML += `
+                        <p>${lang} - ${data.languagePercentages[lang]}%</p>
+
+                        <div class="score-bar">
+                            <div class="score-fill"
+                            style="width:${data.languagePercentages[lang]}%; background:${scoreColor}">
+                            </div>
+                        </div>
+                    `;
+                }
             }
+
+
+            /* Top Repositories */
+
             let repoHTML = "";
 
-if (data.topRepositories && data.topRepositories.length > 0) {
-    repoHTML = "<h3>Top Repositories</h3><ul>";
+            if (data.topRepositories && data.topRepositories.length > 0) {
 
-    data.topRepositories.forEach(repo => {
-        repoHTML += `
-            <li>
-                <a href="${repo.url}" target="_blank">${repo.name}</a>
-                ⭐ ${repo.stars}
-            </li>
-        `;
-    });
+                repoHTML = "<h3>Top Repositories</h3><ul>";
 
-    repoHTML += "</ul>";
-}
+                data.topRepositories.forEach(repo => {
+
+                    repoHTML += `
+                        <li>
+                            <a href="${repo.url}" target="_blank">
+                                ${repo.name}
+                            </a>
+                            ⭐ ${repo.stars}
+                        </li>
+                    `;
+                });
+
+                repoHTML += "</ul>";
+            }
+
+
+            /* Score Breakdown */
 
             let breakdownHTML = `
                 <table class="breakdown-table">
@@ -75,18 +100,29 @@ if (data.topRepositories && data.topRepositories.length > 0) {
                 </table>
             `;
 
+
+            /* Render Full Results */
+
             resultDiv.innerHTML = `
+
                 <div class="profile-section">
+
                     <img src="${data.avatar}" class="avatar">
+
                     <h3>${data.username}</h3>
+
                     <a href="${data.profileUrl}" target="_blank" class="github-btn">
                         View GitHub Profile
                     </a>
+
                 </div>
 
                 <h3>Overall Score: ${data.score}/100</h3>
+
                 <div class="score-bar">
-                    <div class="score-fill" style="width:${data.score}%; background:${scoreColor}"></div>
+                    <div class="score-fill"
+                    style="width:${data.score}%; background:${scoreColor}">
+                    </div>
                 </div>
 
                 <h3>Performance Breakdown</h3>
@@ -95,10 +131,17 @@ if (data.topRepositories && data.topRepositories.length > 0) {
                 <h3>Language Distribution</h3>
                 ${languageHTML}
 
+                <canvas id="languageChart"
+                style="max-width:400px;margin:20px auto;"></canvas>
+
                 <h3>Total Stars: ⭐ ${data.totalStars}</h3>
-                <p>Top Repository: ${data.topRepo || "N/A"}</p>
-                ${repoHTML}
+
                 
+
+                <p>Top Repository: ${data.topRepo || "N/A"}</p>
+
+                ${repoHTML}
+
                 <h3>Recommendations</h3>
                 <ul>
                     ${data.recommendations.map(r => `<li>${r}</li>`).join("")}
@@ -108,18 +151,63 @@ if (data.topRepositories && data.topRepositories.length > 0) {
                 <ul>
                     ${data.redFlags.map(r => `<li class="red-flag">${r}</li>`).join("")}
                 </ul>
+
             `;
 
-        } catch (error) {
-    console.error(error);
 
-    resultDiv.innerHTML = `
-        <div class="error-box">
-            ❌ Unable to analyze profile.<br>
-            Check username or try again later.
-        </div>
-    `;
-}
+            /* Chart Rendering */
+
+            const chartCanvas = document.getElementById("languageChart");
+
+            if (chartCanvas && data.languagePercentages) {
+
+                const labels = Object.keys(data.languagePercentages);
+                const values = Object.values(data.languagePercentages);
+
+                if (labels.length > 0) {
+
+                    new Chart(chartCanvas, {
+
+                        type: "pie",
+
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: "Languages",
+                                data: values
+                            }]
+                        },
+
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: {
+                                    position: "bottom"
+                                }
+                            }
+                        }
+
+                    });
+
+                }
+            }
+
+
+          
+
+        }
+
+        catch (error) {
+
+            console.error(error);
+
+            resultDiv.innerHTML = `
+                <div class="error-box">
+                    ❌ Unable to analyze profile.<br>
+                    Check username or try again later.
+                </div>
+            `;
+        }
 
     });
 

@@ -206,3 +206,93 @@ ul li a {
   text-decoration: none;
   font-weight: 500;
 }
+/* ===== Modern UI Upgrade ===== */
+
+body {
+    background: linear-gradient(135deg, #eef2ff, #f8fafc);
+}
+
+/* Card styling */
+.card {
+    border-radius: 16px;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.1);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+}
+
+/* Button */
+button {
+    background: #4f46e5;
+    color: white;
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 10px 18px;
+}
+
+button:hover {
+    background: #4338ca;
+}
+
+/* GitHub button */
+.github-btn {
+    background: #24292f;
+    padding: 8px 14px;
+    border-radius: 6px;
+    color: white;
+    text-decoration: none;
+}
+
+.github-btn:hover {
+    background: black;
+}
+
+/* Profile avatar */
+.avatar {
+    border-radius: 50%;
+    width: 90px;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+}
+
+/* Chart spacing */
+#languageChart {
+    margin-top: 20px;
+}
+.calendar{
+    margin-top:20px;
+}
+.dashboard{
+display:flex;
+min-height:100vh;
+}
+
+.sidebar{
+width:250px;
+background:#1e293b;
+color:white;
+padding:30px;
+}
+
+.main-content{
+flex:1;
+padding:40px;
+background:#f8fafc;
+}
+
+.grid{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:30px;
+margin-top:40px;
+}
+
+.card{
+background:white;
+padding:25px;
+border-radius:12px;
+box-shadow:0 10px 25px rgba(0,0,0,0.08);
+}
+
